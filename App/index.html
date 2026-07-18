@@ -148,6 +148,11 @@
       });
     }
 
+    // 카카오 place_url이 http로 오는 경우가 있어, https 페이지 안에서 iframe이 혼합 콘텐츠로 막히지 않게 변환
+    function toHttps(url) {
+      return url ? url.replace(/^http:\/\//, "https://") : url;
+    }
+
     function shortCategory(catName) {
       if (!catName) return "음식점";
       const parts = catName.split(">").map((p) => p.trim());
@@ -178,7 +183,7 @@
         category: shortCategory(r.category_name),
         address: r.road_address_name || r.address_name || "",
         phone: r.phone || "",
-        place_url: r.place_url || "",
+        place_url: toHttps(r.place_url) || "",
         x: parseFloat(r.x),
         y: parseFloat(r.y),
       };
@@ -292,7 +297,7 @@
           category: shortCategory(r.category_name),
           address: r.road_address_name || r.address_name || "",
           phone: r.phone || "",
-          place_url: r.place_url || "",
+          place_url: toHttps(r.place_url) || "",
           distance: fmtDistance(r.distance),
           isFav: favIds.has(r.id),
           raw: r,
@@ -308,7 +313,7 @@
           category: f.category,
           address: f.address,
           phone: f.phone,
-          place_url: f.place_url,
+          place_url: toHttps(f.place_url),
           distance: dist != null ? fmtDistance(dist) : "",
           isFav: true,
           raw: f,
