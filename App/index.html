@@ -186,6 +186,7 @@
         place_url: toHttps(r.place_url) || "",
         x: parseFloat(r.x),
         y: parseFloat(r.y),
+        note: "",
       };
     }
 
@@ -289,8 +290,13 @@
         setFavs((prev) => prev.filter((f) => f.place_id !== pid));
       }, []);
 
+      const updateFavNote = useCallback((pid, note) => {
+        setFavs((prev) => prev.map((f) => (f.place_id === pid ? { ...f, note } : f)));
+      }, []);
+
       // 검색 결과 항목 → 하단 시트에 상세 표시
       const showResultDetail = useCallback((r) => {
+        const fav = favs.find((f) => f.place_id === r.id);
         setSelectedPlace({
           id: r.id,
           name: r.place_name,
@@ -299,10 +305,11 @@
           phone: r.phone || "",
           place_url: toHttps(r.place_url) || "",
           distance: fmtDistance(r.distance),
-          isFav: favIds.has(r.id),
+          isFav: !!fav,
+          note: fav ? fav.note || "" : "",
           raw: r,
         });
-      }, [favIds]);
+      }, [favs]);
 
       // 찜 항목 → 하단 시트에 상세 표시
       const showFavDetail = useCallback((f) => {
@@ -316,6 +323,7 @@
           place_url: toHttps(f.place_url),
           distance: dist != null ? fmtDistance(dist) : "",
           isFav: true,
+          note: f.note || "",
           raw: f,
         });
       }, [loc]);
@@ -331,6 +339,11 @@
           return { ...p, isFav: !p.isFav };
         });
       }, [toggleFav, removeFav]);
+
+      const changeNote = useCallback((id, note) => {
+        setSelectedPlace((p) => (p ? { ...p, note } : p));
+        updateFavNote(id, note);
+      }, [updateFavNote]);
 
       // SDK 로드
       useEffect(() => {
@@ -631,6 +644,15 @@
                       </button>
                     )}
                   </div>
+                  {selectedPlace.isFav && (
+                    <input
+                      type="text"
+                      value={selectedPlace.note}
+                      onChange={(e) => changeNote(selectedPlace.id, e.target.value)}
+                      placeholder="메모 추가 (예: 김치찌개 맛집, 웨이팅 있음)"
+                      className="w-full rc-input px-3 py-2 text-sm mt-2"
+                    />
+                  )}
                 </div>
               ) : view === "search" ? (
                 <div className="overflow-y-auto px-4 pt-1 pb-4">
@@ -674,9 +696,12 @@
                         const dist = loc ? haversine(loc, { lat: f.y, lng: f.x }) : null;
                         return (
                           <li key={f.place_id} className="dash-b flex items-center gap-2 py-2.5">
-                            <button onClick={() => showFavDetail(f)} className="flex-1 min-w-0 flex items-center gap-2 text-left">
-                              <span className="font-semibold truncate text-sm">{f.place_name}</span>
-                              {dist != null && <span className="text-xs stamp-text font-semibold shrink-0 ml-auto">{fmtDistance(dist)}</span>}
+                            <button onClick={() => showFavDetail(f)} className="flex-1 min-w-0 text-left">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold truncate text-sm">{f.place_name}</span>
+                                {dist != null && <span className="text-xs stamp-text font-semibold shrink-0 ml-auto">{fmtDistance(dist)}</span>}
+                              </div>
+                              {f.note && <p className="text-xs muted mt-0.5 truncate">📝 {f.note}</p>}
                             </button>
                             <button onClick={() => removeFav(f.place_id)} className="text-lg leading-none shrink-0">⭐</button>
                           </li>
