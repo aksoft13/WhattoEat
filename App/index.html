@@ -245,6 +245,14 @@
         if (loc) localStorage.setItem("loc", JSON.stringify(loc));
       }, [loc]);
 
+      // 이름 붙여 저장해두는 위치 목록 (집, 회사 등)
+      const [savedLocs, setSavedLocs] = useState(() => {
+        try { return JSON.parse(localStorage.getItem("savedLocs")) || []; } catch (e) { return []; }
+      });
+      useEffect(() => {
+        localStorage.setItem("savedLocs", JSON.stringify(savedLocs));
+      }, [savedLocs]);
+
       // 룰렛에 포함할 카테고리 (기본: 전체 해제, 중복 선택 가능)
       const [selectedCats, setSelectedCats] = useState(() => new Set());
       const toggleCat = useCallback((name) => {
@@ -392,6 +400,26 @@
           () => applyLoc({ ...FALLBACK }),
           { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
         );
+      }, []);
+
+      // 현재 위치를 이름 붙여 저장
+      const saveCurrentLoc = useCallback(() => {
+        if (!loc) return;
+        const name = window.prompt("이 위치를 어떤 이름으로 저장할까요? (예: 집, 회사)");
+        if (!name || !name.trim()) return;
+        setSavedLocs((prev) => [...prev, { id: String(Date.now()), name: name.trim(), lat: loc.lat, lng: loc.lng }]);
+      }, [loc]);
+
+      // 저장된 위치로 전환 — 이미 뽑힌 카테고리가 있으면 그 자리에서 바로 재검색
+      const selectSavedLoc = useCallback((s) => {
+        const next = { lat: s.lat, lng: s.lng, label: `📍 ${s.name}` };
+        setLoc(next);
+        const { picked: currentPicked, runSearch: currentRunSearch } = latestRef.current;
+        if (currentPicked) currentRunSearch(currentPicked, next);
+      }, []);
+
+      const deleteSavedLoc = useCallback((id) => {
+        setSavedLocs((prev) => prev.filter((s) => s.id !== id));
       }, []);
 
       // 지도 초기화 (최초 1회) — 내 위치 마커는 드래그·지도 클릭으로 직접 보정 가능
@@ -575,6 +603,19 @@
                 <button onClick={relocate} className="rc-pill px-2.5 py-1 shrink-0 hover:opacity-70">
                   GPS로 다시 찾기
                 </button>
+              </div>
+
+              {/* 저장된 위치 */}
+              <div className="px-4 pb-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs whitespace-nowrap">
+                <button onClick={saveCurrentLoc} disabled={!loc} className="rc-pill px-2.5 py-1 shrink-0 hover:opacity-70">
+                  ＋ 이 위치 저장
+                </button>
+                {savedLocs.map((s) => (
+                  <span key={s.id} className="inline-flex items-center rc-pill pl-2.5 pr-1 py-1 shrink-0 gap-1">
+                    <button onClick={() => selectSavedLoc(s)} className="font-semibold">{s.name}</button>
+                    <button onClick={() => deleteSavedLoc(s.id)} className="muted px-1 hover:opacity-70">✕</button>
+                  </span>
+                ))}
               </div>
 
               {/* 반경 */}
