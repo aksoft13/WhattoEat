@@ -50,9 +50,6 @@
     .rc-pill { border: 1px solid var(--line); color: #5B5646; border-radius: 999px; }
     .rc-pill.on { background: var(--stamp); color: #fff; border-color: var(--stamp); }
 
-    .rc-pill-flat { color: #5B5646; border-radius: 999px; }
-    .rc-pill-flat.on { background: var(--stamp); color: #fff; }
-
     .rc-chip { border: 1px solid var(--line); color: var(--muted); border-radius: 2px; }
     .rc-chip.on {
       border: 1px solid var(--ink); color: var(--ink); font-weight: 700;
@@ -238,8 +235,15 @@
       const [sdkReady, setSdkReady] = useState(false);
       const [keyError, setKeyError] = useState("");
 
-      const [loc, setLoc] = useState(null);      // {lat,lng,label}
+      // 위치 저장 — 이전에 저장한 위치가 있으면 그걸로 시작 (직접 고친 위치가 앱을 껐다 켜도 유지됨)
+      const [loc, setLoc] = useState(() => {
+        try { return JSON.parse(localStorage.getItem("loc")) || null; } catch (e) { return null; }
+      });
       const [radius, setRadius] = useState(1000);
+
+      useEffect(() => {
+        if (loc) localStorage.setItem("loc", JSON.stringify(loc));
+      }, [loc]);
 
       // 룰렛에 포함할 카테고리 (기본: 전체 해제, 중복 선택 가능)
       const [selectedCats, setSelectedCats] = useState(() => new Set());
@@ -361,9 +365,9 @@
         return () => { cancelled = true; };
       }, [kakaoKey]);
 
-      // 위치 가져오기
+      // 위치 가져오기 — 저장된 위치가 있으면 그대로 쓰고, 없을 때만 GPS로 새로 조회
       useEffect(() => {
-        if (!sdkReady) return;
+        if (!sdkReady || loc) return;
         if (!navigator.geolocation) {
           setLoc({ ...FALLBACK });
           return;
@@ -563,7 +567,7 @@
             </div>
 
             {view === "search" && (<>
-              {/* 위치 + 반경 */}
+              {/* 위치 */}
               <div className="px-4 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-xs whitespace-nowrap">
                 <span className="inline-flex items-center gap-1 rc-pill px-2.5 py-1 shrink-0">
                   📍 {loc ? loc.label : "위치 확인 중…"}
@@ -571,18 +575,20 @@
                 <button onClick={relocate} className="rc-pill px-2.5 py-1 shrink-0 hover:opacity-70">
                   GPS로 다시 찾기
                 </button>
-                <span className="rc-box inline-flex items-center gap-1 px-1.5 py-1 shrink-0">
-                  <span className="muted pl-0.5">반경</span>
-                  {RADIUS_OPTIONS.map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => setRadius(r)}
-                      className={`px-1.5 py-0.5 rc-pill-flat transition ${radius === r ? "on" : ""}`}
-                    >
-                      {r >= 1000 ? `${r / 1000}km` : `${r}m`}
-                    </button>
-                  ))}
-                </span>
+              </div>
+
+              {/* 반경 */}
+              <div className="px-4 pb-2 flex items-center gap-1.5 text-xs">
+                <span className="muted">반경</span>
+                {RADIUS_OPTIONS.map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => setRadius(r)}
+                    className={`px-2.5 py-1 rc-pill transition ${radius === r ? "on" : ""}`}
+                  >
+                    {r >= 1000 ? `${r / 1000}km` : `${r}m`}
+                  </button>
+                ))}
               </div>
 
               {/* 카테고리 필터 (한 화면에 모두 표시, 중복 선택 가능) */}
