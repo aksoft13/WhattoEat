@@ -662,16 +662,18 @@
             </>)}
           </div>
 
-          {/* 네이버지도 형식: 지도는 가로 폭에 맞춘 정사각형, 결과/상세는 하단 시트로 */}
-          <div className="relative w-full aspect-square mb-4">
+          {/* 네이버지도 형식: 지도는 가로 폭에 맞춘 정사각형 */}
+          <div className="relative w-full aspect-square mb-3">
             <div ref={mapRef} className="absolute inset-0" style={{ background: "var(--paper2)" }} />
 
             <div className="map-hint absolute top-2 left-1/2 -translate-x-1/2 px-3 py-1 text-[10px] muted whitespace-nowrap">
               📌 탭하거나 핀을 드래그해 위치 수정
             </div>
+          </div>
 
-            <div className="sheet absolute left-0 right-0 bottom-0 flex flex-col" style={{ maxHeight: "46%" }}>
-              <div className="mx-auto mt-2 h-1 w-10 rounded-full shrink-0" style={{ background: "var(--line)" }} />
+          {/* 결과/상세 — 스크롤 가능한 만큼 화면을 넉넉하게 채움 */}
+          <div className="sheet w-full flex flex-col mb-4" style={{ maxHeight: "70vh" }}>
+            <div className="mx-auto mt-2 h-1 w-10 rounded-full shrink-0" style={{ background: "var(--line)" }} />
 
               {selectedPlace ? (
                 <div className="overflow-y-auto px-4 pt-2 pb-4">
@@ -765,9 +767,9 @@
                 </div>
               )}
             </div>
-          </div>
 
           {/* 메뉴 보기 — 카카오맵 페이지를 앱 밖으로 나가지 않고 그대로 띄움 */}
+
           {menuUrl && (
             <div className="fixed inset-0 flex flex-col" style={{ zIndex: 100, background: "var(--paper)" }}>
               <div className="flex items-center justify-between px-4 py-2.5 dash-b shrink-0" style={{ background: "var(--paper)" }}>
