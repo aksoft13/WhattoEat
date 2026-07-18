@@ -246,10 +246,7 @@
       }, []);
       const catPool = MENUS.filter((m) => selectedCats.has(m.name));
 
-      const [spinning, setSpinning] = useState(false);
-      const [display, setDisplay] = useState(null); // 룰렛 중 표시되는 메뉴
-      const [picked, setPicked] = useState(null);    // 최종 뽑힌 메뉴
-      const [ticketNo, setTicketNo] = useState(null); // 영수증 스탬프용 티켓 번호
+      const [picked, setPicked] = useState(null);    // 선택된 카테고리
       const [results, setResults] = useState([]);
       const [searching, setSearching] = useState(false);
       const [searchError, setSearchError] = useState("");
@@ -265,7 +262,6 @@
       const mapObjRef = useRef(null);
       const myMarkerRef = useRef(null);
       const markersRef = useRef([]);
-      const spinTimer = useRef(null);
 
       // 찜 변경 시 저장
       useEffect(() => {
@@ -507,47 +503,13 @@
         latestRef.current = { picked, runSearch };
       });
 
-      // 카테고리 칩을 누르면 룰렛 없이 그 자리에서 바로 검색
+      // 카테고리 칩을 누르면 그 자리에서 바로 검색
       const selectCategory = useCallback((m) => {
         toggleCat(m.name);
-        setSpinning(false);
-        clearInterval(spinTimer.current);
-        setDisplay(null);
         setPicked(m);
-        setTicketNo(String(Math.floor(10000 + Math.random() * 90000)));
+        setSelectedPlace(null);
         runSearch(m);
       }, [toggleCat, runSearch]);
-
-      const spin = useCallback(() => {
-        if (spinning || !loc || catPool.length === 0) return;
-        setView("search");
-        setSpinning(true);
-        setPicked(null);
-        setResults([]);
-        setSearchError("");
-        setSelectedPlace(null);
-
-        const target = catPool[Math.floor(Math.random() * catPool.length)];
-        let ticks = 0;
-        const total = 18 + Math.floor(Math.random() * 6);
-
-        clearInterval(spinTimer.current);
-        spinTimer.current = setInterval(() => {
-          ticks++;
-          if (ticks >= total) {
-            clearInterval(spinTimer.current);
-            setDisplay(target);
-            setPicked(target);
-            setTicketNo(String(Math.floor(10000 + Math.random() * 90000)));
-            setSpinning(false);
-            runSearch(target);
-          } else {
-            setDisplay(catPool[Math.floor(Math.random() * catPool.length)]);
-          }
-        }, 80);
-      }, [spinning, loc, runSearch, catPool]);
-
-      useEffect(() => () => clearInterval(spinTimer.current), []);
 
       const resetKey = () => {
         localStorage.removeItem("kakaoKey");
@@ -558,8 +520,6 @@
       if (!kakaoKey) {
         return <KeySetup onSave={(k) => { localStorage.setItem("kakaoKey", k); setKakaoKey(k); }} error={keyError} />;
       }
-
-      const current = display || picked;
 
       return (
         <div className="min-h-full max-w-md mx-auto flex flex-col">
@@ -625,38 +585,6 @@
                 </div>
               </div>
 
-              {/* 룰렛 바 */}
-              <div className="px-4 pb-2">
-                <div className="rc-card dash-y px-3 py-2 flex items-center gap-2">
-                  {current ? (
-                    <div className={`flex-1 flex items-center gap-2 min-w-0 ${spinning ? "" : "animate-pop"}`} key={current.name + (spinning ? "s" : "p")}>
-                      <div className="text-2xl shrink-0">{current.emoji}</div>
-                      <div className="min-w-0">
-                        <p className="text-[8px] tracking-[0.15em] muted leading-none">※ 오늘의 메뉴 ※</p>
-                        <div className="text-sm font-bold leading-tight truncate">{current.name}</div>
-                      </div>
-                      {!spinning && picked && ticketNo && (
-                        <span className="stamp-tag shrink-0">NO.{ticketNo}</span>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex-1 flex items-center gap-2">
-                      <div className="text-2xl">🎲</div>
-                      <div className="muted text-xs">메뉴를 뽑아보세요!</div>
-                    </div>
-                  )}
-                  <button
-                    onClick={spin}
-                    disabled={spinning || !loc || catPool.length === 0}
-                    className="shrink-0 rc-btn text-xs font-bold py-2 px-3 transition"
-                  >
-                    {spinning ? "고르는 중…" : picked ? "다시 뽑기 🔄" : "뭐 먹지? 🎯"}
-                  </button>
-                </div>
-                {catPool.length === 0 && (
-                  <p className="text-[10px] stamp-text mt-1">카테고리를 1개 이상 선택해주세요.</p>
-                )}
-              </div>
             </>)}
           </div>
 
