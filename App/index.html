@@ -551,7 +551,7 @@
         });
       }, [selectedPlace]);
 
-      // 선택한 식당까지 가는 길을 지도에 표시 (서버리스 함수로 카카오 길찾기 API 호출)
+      // 선택한 식당까지 걸어가는 길을 지도에 표시 (OSRM 공개 도보 경로 서비스, 키 불필요)
       useEffect(() => {
         const kakao = window.kakao;
         const map = mapObjRef.current;
@@ -562,21 +562,14 @@
         if (!kakao || !map || !loc || !selectedPlace || selectedPlace.lat == null) return;
 
         let cancelled = false;
-        fetch(`/api/route?originX=${loc.lng}&originY=${loc.lat}&destX=${selectedPlace.lng}&destY=${selectedPlace.lat}`)
+        const url = `https://router.project-osrm.org/route/v1/foot/${loc.lng},${loc.lat};${selectedPlace.lng},${selectedPlace.lat}?overview=full&geometries=geojson`;
+        fetch(url)
           .then((res) => res.json())
           .then((data) => {
             if (cancelled) return;
             const route = data.routes && data.routes[0];
-            if (!route || route.result_code !== 0) return;
-            const path = [];
-            route.sections.forEach((sec) => {
-              sec.roads.forEach((road) => {
-                const v = road.vertexes;
-                for (let i = 0; i < v.length; i += 2) {
-                  path.push(new kakao.maps.LatLng(v[i + 1], v[i]));
-                }
-              });
-            });
+            if (!route || data.code !== "Ok") return;
+            const path = route.geometry.coordinates.map(([lng, lat]) => new kakao.maps.LatLng(lat, lng));
             if (!path.length || cancelled) return;
             routeRef.current = new kakao.maps.Polyline({
               map,
