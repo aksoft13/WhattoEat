@@ -85,6 +85,9 @@
     // 서울 시청 (위치 거부 시 폴백)
     const FALLBACK = { lat: 37.5665, lng: 126.9780, label: "서울 시청 (기본 위치)" };
 
+    // 카카오 JavaScript 키 (도메인 화이트리스트로 보호되는 공개 키 — 브라우저에 그대로 노출되는 게 정상)
+    const DEFAULT_KAKAO_KEY = "6d40c79ff2c11ea3e88e4e0bced84cf0";
+
     const MENUS = [
       { emoji: "🍚", name: "한식",   keyword: "한식" },
       { emoji: "🍲", name: "찌개",   keyword: "찌개" },
@@ -212,7 +215,7 @@
 
     // ── 메인 앱 ────────────────────────────────
     function App() {
-      const [kakaoKey, setKakaoKey] = useState(() => localStorage.getItem("kakaoKey") || "");
+      const [kakaoKey, setKakaoKey] = useState(() => localStorage.getItem("kakaoKey") || DEFAULT_KAKAO_KEY);
       const [sdkReady, setSdkReady] = useState(false);
       const [keyError, setKeyError] = useState("");
 
