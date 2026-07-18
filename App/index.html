@@ -223,7 +223,7 @@
       const [radius, setRadius] = useState(1000);
 
       // 룰렛에 포함할 카테고리 (기본: 전체 선택, 중복 선택 가능)
-      const [selectedCats, setSelectedCats] = useState(() => new Set(MENUS.map((m) => m.name)));
+      const [selectedCats, setSelectedCats] = useState(() => new Set());
       const toggleCat = useCallback((name) => {
         setSelectedCats((prev) => {
           const next = new Set(prev);
@@ -328,11 +328,11 @@
         });
         mapObjRef.current = map;
 
-        // 카카오맵 자체의 빨간 상점 아이콘과 헷갈리지 않도록, 눈에 띄는 파란 점으로 표시
+        // 카카오맵 자체의 빨간 상점 아이콘과 헷갈리지 않도록, 파란색 핀 모양으로 표시
         const myLocSvg = `data:image/svg+xml;utf8,${encodeURIComponent(
-          `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">` +
-          `<circle cx="20" cy="20" r="17" fill="#2B6CB0" opacity="0.18"/>` +
-          `<circle cx="20" cy="20" r="9" fill="#2B6CB0" stroke="#FFFFFF" stroke-width="3"/>` +
+          `<svg xmlns="http://www.w3.org/2000/svg" width="34" height="46" viewBox="0 0 34 46">` +
+          `<path d="M17 0C7.6 0 0 7.6 0 17c0 12.7 17 29 17 29s17-16.3 17-29C34 7.6 26.4 0 17 0z" fill="#2B6CB0" stroke="#FFFFFF" stroke-width="2"/>` +
+          `<circle cx="17" cy="17" r="6.5" fill="#FFFFFF"/>` +
           `</svg>`
         )}`;
         const marker = new kakao.maps.Marker({
@@ -340,8 +340,8 @@
           position: new kakao.maps.LatLng(loc.lat, loc.lng),
           image: new kakao.maps.MarkerImage(
             myLocSvg,
-            new kakao.maps.Size(40, 40),
-            { offset: new kakao.maps.Point(20, 20) }
+            new kakao.maps.Size(34, 46),
+            { offset: new kakao.maps.Point(17, 46) }
           ),
           draggable: true,
           zIndex: 10,
