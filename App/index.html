@@ -127,6 +127,14 @@
 
     const RADIUS_OPTIONS = [500, 1000, 2000, 3000];
 
+    // 검색 결과 마커: 기본(파란 원) / 선택됨(주황 원, 더 크게)
+    const RESULT_MARKER_SVG = (color, r) =>
+      `data:image/svg+xml;utf8,${encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${r * 2}" height="${r * 2}" viewBox="0 0 ${r * 2} ${r * 2}">` +
+        `<circle cx="${r}" cy="${r}" r="${r - 2.5}" fill="${color}" stroke="#FFFFFF" stroke-width="2.5"/>` +
+        `</svg>`
+      )}`;
+
     // 카카오 SDK 동적 로드
     function loadKakaoSdk(key) {
       return new Promise((resolve, reject) => {
@@ -287,6 +295,7 @@
       const mapObjRef = useRef(null);
       const myMarkerRef = useRef(null);
       const markersRef = useRef([]);
+      const routeRef = useRef(null);
 
       // 찜 변경 시 저장
       useEffect(() => {
@@ -323,6 +332,8 @@
           phone: r.phone || "",
           place_url: toHttps(r.place_url) || "",
           distance: fmtDistance(r.distance),
+          lat: parseFloat(r.y),
+          lng: parseFloat(r.x),
           isFav: !!fav,
           note: fav ? fav.note || "" : "",
           raw: r,
@@ -340,6 +351,8 @@
           phone: f.phone,
           place_url: toHttps(f.place_url),
           distance: dist != null ? fmtDistance(dist) : "",
+          lat: f.y,
+          lng: f.x,
           isFav: true,
           note: f.note || "",
           raw: f,
@@ -496,27 +509,88 @@
         const map = mapObjRef.current;
         if (!map || !window.kakao) return;
         const kakao = window.kakao;
-        markersRef.current.forEach((m) => m.setMap(null));
+        markersRef.current.forEach(({ marker }) => marker.setMap(null));
         markersRef.current = [];
         if (view !== "search" || !results.length) return;
 
         const bounds = new kakao.maps.LatLngBounds();
         if (loc) bounds.extend(new kakao.maps.LatLng(loc.lat, loc.lng));
+        const defaultImage = new kakao.maps.MarkerImage(
+          RESULT_MARKER_SVG("#2B6CB0", 12), new kakao.maps.Size(24, 24), { offset: new kakao.maps.Point(12, 12) }
+        );
 
         results.forEach((r, i) => {
           const pos = new kakao.maps.LatLng(parseFloat(r.y), parseFloat(r.x));
-          const marker = new kakao.maps.Marker({ map, position: pos });
+          const marker = new kakao.maps.Marker({ map, position: pos, image: defaultImage });
           const info = new kakao.maps.InfoWindow({
             content: `<div style="padding:5px 8px;font-size:12px;white-space:nowrap;">${i + 1}. ${r.place_name}</div>`,
           });
           kakao.maps.event.addListener(marker, "mouseover", () => info.open(map, marker));
           kakao.maps.event.addListener(marker, "mouseout", () => info.close());
           kakao.maps.event.addListener(marker, "click", () => showResultDetailRef.current(r));
-          markersRef.current.push(marker);
+          markersRef.current.push({ id: r.id, marker });
           bounds.extend(pos);
         });
         map.setBounds(bounds);
       }, [results, loc, view]);
+
+      // 목록/지도에서 식당을 선택하면 그 마커만 다른 색으로 강조
+      useEffect(() => {
+        const kakao = window.kakao;
+        if (!kakao) return;
+        const defaultImage = new kakao.maps.MarkerImage(
+          RESULT_MARKER_SVG("#2B6CB0", 12), new kakao.maps.Size(24, 24), { offset: new kakao.maps.Point(12, 12) }
+        );
+        const highlightImage = new kakao.maps.MarkerImage(
+          RESULT_MARKER_SVG("#E3A324", 17), new kakao.maps.Size(34, 34), { offset: new kakao.maps.Point(17, 17) }
+        );
+        markersRef.current.forEach(({ id, marker }) => {
+          const isSelected = selectedPlace && selectedPlace.id === id;
+          marker.setImage(isSelected ? highlightImage : defaultImage);
+          marker.setZIndex(isSelected ? 20 : 1);
+        });
+      }, [selectedPlace]);
+
+      // 선택한 식당까지 가는 길을 지도에 표시 (서버리스 함수로 카카오 길찾기 API 호출)
+      useEffect(() => {
+        const kakao = window.kakao;
+        const map = mapObjRef.current;
+        if (routeRef.current) {
+          routeRef.current.setMap(null);
+          routeRef.current = null;
+        }
+        if (!kakao || !map || !loc || !selectedPlace || selectedPlace.lat == null) return;
+
+        let cancelled = false;
+        fetch(`/api/route?originX=${loc.lng}&originY=${loc.lat}&destX=${selectedPlace.lng}&destY=${selectedPlace.lat}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (cancelled) return;
+            const route = data.routes && data.routes[0];
+            if (!route || route.result_code !== 0) return;
+            const path = [];
+            route.sections.forEach((sec) => {
+              sec.roads.forEach((road) => {
+                const v = road.vertexes;
+                for (let i = 0; i < v.length; i += 2) {
+                  path.push(new kakao.maps.LatLng(v[i + 1], v[i]));
+                }
+              });
+            });
+            if (!path.length || cancelled) return;
+            routeRef.current = new kakao.maps.Polyline({
+              map,
+              path,
+              strokeWeight: 5,
+              strokeColor: "#2B6CB0",
+              strokeOpacity: 0.85,
+              strokeStyle: "solid",
+            });
+          })
+          .catch(() => {});
+
+        return () => { cancelled = true; };
+      }, [selectedPlace && selectedPlace.id, selectedPlace && selectedPlace.lat, selectedPlace && selectedPlace.lng, loc && loc.lat, loc && loc.lng]);
 
       // 지도 마커 클릭 핸들러가 항상 최신 showResultDetail을 참조하도록
       const showResultDetailRef = useRef(showResultDetail);
