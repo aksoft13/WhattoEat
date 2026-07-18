@@ -8,14 +8,75 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet" />
   <style>
+    :root {
+      --paper: #FBF8F1;
+      --paper2: #F1EDDF;
+      --paper3: #E7E1CE;
+      --ink: #211E19;
+      --muted: #8C8672;
+      --line: #D8D2BE;
+      --stamp: #C6362E;
+    }
     html, body, #root { height: 100%; }
-    body { -webkit-tap-highlight-color: transparent; }
+    body {
+      -webkit-tap-highlight-color: transparent;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Nanum Gothic Coding', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
     @keyframes pop { 0% { transform: scale(0.8); opacity: 0; } 60% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
     .animate-pop { animation: pop 0.35s ease-out; }
+
+    .muted { color: var(--muted); }
+    .stamp-text { color: var(--stamp); }
+
+    .rc-card { border: 1.5px solid var(--line); border-radius: 2px; background: var(--paper); }
+    .rc-box { border: 1px solid var(--line); border-radius: 2px; background: var(--paper2); }
+
+    .rc-input { border: 1px solid var(--line); border-radius: 0; background: transparent; color: var(--ink); }
+    .rc-input:focus { outline: none; border-color: var(--ink); }
+    .rc-input::placeholder { color: var(--muted); }
+
+    .rc-btn { background: var(--ink); color: var(--paper); border-radius: 2px; }
+    .rc-btn:disabled { background: #C9C2AE; color: var(--paper); }
+
+    .rc-tab { border: 1px solid var(--line); color: #5B5646; border-radius: 999px; }
+    .rc-tab.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+    .rc-pill { border: 1px solid var(--line); color: #5B5646; border-radius: 999px; }
+    .rc-pill.on { background: var(--stamp); color: #fff; border-color: var(--stamp); }
+
+    .rc-pill-flat { color: #5B5646; border-radius: 999px; }
+    .rc-pill-flat.on { background: var(--stamp); color: #fff; }
+
+    .rc-chip { border: 1px solid var(--line); color: var(--muted); border-radius: 2px; }
+    .rc-chip.on {
+      border: 1px solid var(--ink); color: var(--ink); font-weight: 700;
+      background: repeating-linear-gradient(135deg, var(--paper2), var(--paper2) 2px, var(--paper3) 2px, var(--paper3) 4px);
+    }
+
+    .rc-row { border: 1px dashed var(--line); border-radius: 2px; background: var(--paper); }
+
+    .stamp-tag {
+      display: inline-block; margin-top: 8px; padding: 3px 10px;
+      border: 1.5px solid var(--stamp); color: var(--stamp);
+      font-size: 10px; letter-spacing: .08em; border-radius: 3px; transform: rotate(-4deg);
+    }
+
+    .dash-y { border-top: 1.5px dashed var(--line); border-bottom: 1.5px dashed var(--line); }
+    .dash-b { border-bottom: 1.5px dashed var(--line); }
+
+    .zigzag {
+      clip-path: polygon(0 0,100% 0,100% 97%,96% 100%,92% 97%,88% 100%,84% 97%,80% 100%,76% 97%,72% 100%,68% 97%,64% 100%,60% 97%,56% 100%,52% 97%,48% 100%,44% 97%,40% 100%,36% 97%,32% 100%,28% 97%,24% 100%,20% 97%,16% 100%,12% 97%,8% 100%,4% 97%,0 100%);
+      background: var(--line);
+    }
   </style>
 </head>
-<body class="bg-orange-50">
+<body>
   <div id="root"></div>
 
   <script type="text/babel">
@@ -112,37 +173,37 @@
       const [val, setVal] = useState("");
       return (
         <div className="min-h-full flex items-center justify-center p-6">
-          <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-7">
+          <div className="w-full max-w-md rc-card p-7">
             <div className="text-5xl text-center mb-3">🍽️</div>
-            <h1 className="text-2xl font-bold text-center text-gray-800">오늘 뭐 먹지?</h1>
-            <p className="text-center text-gray-500 mt-1 mb-6 text-sm">시작하려면 카카오 JavaScript 앱 키가 필요해요.</p>
+            <h1 className="text-2xl font-bold text-center uppercase tracking-wide">오늘 뭐 먹지?</h1>
+            <p className="text-center muted mt-1 mb-6 text-sm">시작하려면 카카오 JavaScript 앱 키가 필요해요.</p>
 
             <input
               type="text"
               value={val}
               onChange={(e) => setVal(e.target.value.trim())}
               placeholder="카카오 JavaScript 앱 키 붙여넣기"
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="w-full rc-input px-4 py-3 text-sm"
             />
-            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+            {error && <p className="stamp-text text-sm mt-2">{error}</p>}
 
             <button
               onClick={() => val && onSave(val)}
               disabled={!val}
-              className="w-full mt-4 bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white font-bold py-3 rounded-xl transition"
+              className="w-full mt-4 rc-btn font-bold py-3 transition"
             >
               시작하기
             </button>
 
-            <div className="mt-6 text-xs text-gray-500 leading-relaxed bg-orange-50 rounded-xl p-4">
-              <p className="font-semibold text-gray-700 mb-1">키 발급 방법</p>
-              <ol className="list-decimal list-inside space-y-1">
-                <li><a className="text-orange-600 underline" href="https://developers.kakao.com" target="_blank" rel="noreferrer">developers.kakao.com</a> 로그인 → 내 애플리케이션 생성</li>
+            <div className="mt-6 text-xs muted leading-relaxed rc-box p-4">
+              <p className="font-semibold" style={{ color: "var(--ink)" }}>키 발급 방법</p>
+              <ol className="list-decimal list-inside space-y-1 mt-1">
+                <li><a className="stamp-text underline" href="https://developers.kakao.com" target="_blank" rel="noreferrer">developers.kakao.com</a> 로그인 → 내 애플리케이션 생성</li>
                 <li>앱 설정 → 앱 키 → <b>JavaScript 키</b> 복사</li>
                 <li>제품 설정 → 카카오맵 <b>ON</b></li>
                 <li>앱 설정 → 플랫폼 → Web → 사이트 도메인에<br/> 배포 주소(예: <code>https://whattoeat.vercel.app</code>) 등록</li>
               </ol>
-              <p className="mt-2 text-gray-400">키는 이 브라우저에만 저장되며 외부로 전송되지 않습니다.</p>
+              <p className="mt-2">키는 이 브라우저에만 저장되며 외부로 전송되지 않습니다.</p>
             </div>
           </div>
         </div>
@@ -158,9 +219,21 @@
       const [loc, setLoc] = useState(null);      // {lat,lng,label}
       const [radius, setRadius] = useState(1000);
 
+      // 룰렛에 포함할 카테고리 (기본: 전체 선택, 중복 선택 가능)
+      const [selectedCats, setSelectedCats] = useState(() => new Set(MENUS.map((m) => m.name)));
+      const toggleCat = useCallback((name) => {
+        setSelectedCats((prev) => {
+          const next = new Set(prev);
+          next.has(name) ? next.delete(name) : next.add(name);
+          return next;
+        });
+      }, []);
+      const catPool = MENUS.filter((m) => selectedCats.has(m.name));
+
       const [spinning, setSpinning] = useState(false);
       const [display, setDisplay] = useState(null); // 룰렛 중 표시되는 메뉴
       const [picked, setPicked] = useState(null);    // 최종 뽑힌 메뉴
+      const [ticketNo, setTicketNo] = useState(null); // 영수증 스탬프용 티켓 번호
       const [results, setResults] = useState([]);
       const [searching, setSearching] = useState(false);
       const [searchError, setSearchError] = useState("");
@@ -173,6 +246,7 @@
 
       const mapRef = useRef(null);
       const mapObjRef = useRef(null);
+      const myMarkerRef = useRef(null);
       const markersRef = useRef([]);
       const spinTimer = useRef(null);
 
@@ -226,24 +300,73 @@
         );
       }, [sdkReady]);
 
-      // 지도 초기화
+      // GPS로 위치 다시 찾기 — 이동 후 이미 뽑힌 카테고리가 있으면 그 자리에서 바로 재검색
+      const relocate = useCallback(() => {
+        const applyLoc = (next) => {
+          setLoc(next);
+          const { picked: currentPicked, runSearch: currentRunSearch } = latestRef.current;
+          if (currentPicked) currentRunSearch(currentPicked, next);
+        };
+        if (!navigator.geolocation) { applyLoc({ ...FALLBACK }); return; }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => applyLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude, label: "현재 위치" }),
+          () => applyLoc({ ...FALLBACK }),
+          { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        );
+      }, []);
+
+      // 지도 초기화 (최초 1회) — 내 위치 마커는 드래그·지도 클릭으로 직접 보정 가능
       useEffect(() => {
         if (!sdkReady || !loc || !mapRef.current || mapObjRef.current) return;
         const kakao = window.kakao;
-        mapObjRef.current = new kakao.maps.Map(mapRef.current, {
+        const map = new kakao.maps.Map(mapRef.current, {
           center: new kakao.maps.LatLng(loc.lat, loc.lng),
           level: 4,
         });
-        // 내 위치 마커
-        new kakao.maps.Marker({
-          map: mapObjRef.current,
+        mapObjRef.current = map;
+
+        // 카카오맵 자체의 빨간 상점 아이콘과 헷갈리지 않도록, 눈에 띄는 파란 점으로 표시
+        const myLocSvg = `data:image/svg+xml;utf8,${encodeURIComponent(
+          `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">` +
+          `<circle cx="20" cy="20" r="17" fill="#2B6CB0" opacity="0.18"/>` +
+          `<circle cx="20" cy="20" r="9" fill="#2B6CB0" stroke="#FFFFFF" stroke-width="3"/>` +
+          `</svg>`
+        )}`;
+        const marker = new kakao.maps.Marker({
+          map,
           position: new kakao.maps.LatLng(loc.lat, loc.lng),
           image: new kakao.maps.MarkerImage(
-            "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/red_b.png",
-            new kakao.maps.Size(28, 40)
+            myLocSvg,
+            new kakao.maps.Size(40, 40),
+            { offset: new kakao.maps.Point(20, 20) }
           ),
+          draggable: true,
+          zIndex: 10,
+        });
+        myMarkerRef.current = marker;
+
+        const applyManualLoc = (latlng) => {
+          const next = { lat: latlng.getLat(), lng: latlng.getLng(), label: "직접 설정한 위치 📌" };
+          setLoc(next);
+          const { picked: currentPicked, runSearch: currentRunSearch } = latestRef.current;
+          if (currentPicked) currentRunSearch(currentPicked, next);
+        };
+
+        kakao.maps.event.addListener(marker, "dragend", () => applyManualLoc(marker.getPosition()));
+        kakao.maps.event.addListener(map, "click", (mouseEvent) => {
+          marker.setPosition(mouseEvent.latLng);
+          applyManualLoc(mouseEvent.latLng);
         });
       }, [sdkReady, loc]);
+
+      // loc이 외부에서 바뀌면(GPS 재조회 등) 마커·지도 중심도 함께 맞춤
+      useEffect(() => {
+        if (!mapObjRef.current || !myMarkerRef.current || !loc) return;
+        const kakao = window.kakao;
+        const pos = new kakao.maps.LatLng(loc.lat, loc.lng);
+        myMarkerRef.current.setPosition(pos);
+        mapObjRef.current.setCenter(pos);
+      }, [loc]);
 
       // 결과 → 지도 마커 갱신
       useEffect(() => {
@@ -271,8 +394,9 @@
         map.setBounds(bounds);
       }, [results, loc, view]);
 
-      const runSearch = useCallback((menu) => {
-        if (!window.kakao || !loc) return;
+      const runSearch = useCallback((menu, atLoc) => {
+        const searchLoc = atLoc || loc;
+        if (!window.kakao || !searchLoc) return;
         setSearching(true);
         setSearchError("");
         setResults([]);
@@ -292,7 +416,7 @@
             }
           },
           {
-            location: new kakao.maps.LatLng(loc.lat, loc.lng),
+            location: new kakao.maps.LatLng(searchLoc.lat, searchLoc.lng),
             radius: radius,
             sort: kakao.maps.services.SortBy.DISTANCE,
             size: 15,
@@ -301,15 +425,32 @@
         );
       }, [loc, radius]);
 
+      // 드래그·클릭 핸들러(최초 1회만 등록)가 항상 최신 picked/runSearch를 참조하도록
+      const latestRef = useRef({});
+      useEffect(() => {
+        latestRef.current = { picked, runSearch };
+      });
+
+      // 카테고리 칩을 누르면 룰렛 없이 그 자리에서 바로 검색
+      const selectCategory = useCallback((m) => {
+        toggleCat(m.name);
+        setSpinning(false);
+        clearInterval(spinTimer.current);
+        setDisplay(null);
+        setPicked(m);
+        setTicketNo(String(Math.floor(10000 + Math.random() * 90000)));
+        runSearch(m);
+      }, [toggleCat, runSearch]);
+
       const spin = useCallback(() => {
-        if (spinning || !loc) return;
+        if (spinning || !loc || catPool.length === 0) return;
         setView("search");
         setSpinning(true);
         setPicked(null);
         setResults([]);
         setSearchError("");
 
-        const target = MENUS[Math.floor(Math.random() * MENUS.length)];
+        const target = catPool[Math.floor(Math.random() * catPool.length)];
         let ticks = 0;
         const total = 18 + Math.floor(Math.random() * 6);
 
@@ -320,13 +461,14 @@
             clearInterval(spinTimer.current);
             setDisplay(target);
             setPicked(target);
+            setTicketNo(String(Math.floor(10000 + Math.random() * 90000)));
             setSpinning(false);
             runSearch(target);
           } else {
-            setDisplay(MENUS[Math.floor(Math.random() * MENUS.length)]);
+            setDisplay(catPool[Math.floor(Math.random() * catPool.length)]);
           }
         }, 80);
-      }, [spinning, loc, runSearch]);
+      }, [spinning, loc, runSearch, catPool]);
 
       useEffect(() => () => clearInterval(spinTimer.current), []);
 
@@ -345,36 +487,39 @@
       return (
         <div className="min-h-full max-w-md mx-auto flex flex-col">
           {/* 헤더 */}
-          <header className="px-5 pt-6 pb-3 flex items-center justify-between gap-2">
-            <h1 className="text-xl font-bold text-gray-800">🍽️ 오늘 뭐 먹지?</h1>
-            <button onClick={resetKey} className="text-xs text-gray-400 hover:text-gray-600">키 변경</button>
+          <header className="px-5 pt-6 pb-3 flex items-center justify-between gap-2 dash-b">
+            <h1 className="text-xl font-bold uppercase tracking-wide">🍽️ 오늘 뭐 먹지?</h1>
+            <button onClick={resetKey} className="text-xs muted hover:opacity-70">키 변경</button>
           </header>
 
           {/* 탭 */}
-          <div className="px-5 flex gap-2 mb-1">
+          <div className="px-5 flex gap-2 mb-1 mt-3">
             <button onClick={() => setView("search")}
-              className={`px-3 py-1.5 rounded-full text-sm font-semibold transition ${view === "search" ? "bg-orange-500 text-white" : "bg-white text-gray-500 shadow-sm"}`}>
+              className={`px-3 py-1.5 rc-tab text-sm font-semibold transition ${view === "search" ? "on" : ""}`}>
               🎯 추천
             </button>
             <button onClick={() => setView("favs")}
-              className={`px-3 py-1.5 rounded-full text-sm font-semibold transition ${view === "favs" ? "bg-orange-500 text-white" : "bg-white text-gray-500 shadow-sm"}`}>
+              className={`px-3 py-1.5 rc-tab text-sm font-semibold transition ${view === "favs" ? "on" : ""}`}>
               ⭐ 찜 {favs.length > 0 && `(${favs.length})`}
             </button>
           </div>
 
           {view === "search" && (<>
           {/* 위치 + 반경 */}
-          <div className="px-5 flex items-center gap-2 flex-wrap text-sm">
-            <span className="inline-flex items-center gap-1 bg-white rounded-full px-3 py-1 shadow-sm text-gray-600">
+          <div className="px-5 flex items-center gap-2 flex-wrap text-sm mt-2">
+            <span className="inline-flex items-center gap-1 rc-pill px-3 py-1">
               📍 {loc ? loc.label : "위치 확인 중…"}
             </span>
-            <div className="inline-flex items-center gap-1 bg-white rounded-full px-2 py-1 shadow-sm">
-              <span className="text-gray-500 pl-1">반경</span>
+            <button onClick={relocate} className="rc-pill px-3 py-1 hover:opacity-70">
+              GPS로 다시 찾기
+            </button>
+            <div className="inline-flex items-center gap-1 rc-box px-2 py-1">
+              <span className="muted pl-1">반경</span>
               {RADIUS_OPTIONS.map((r) => (
                 <button
                   key={r}
                   onClick={() => setRadius(r)}
-                  className={`px-2 py-0.5 rounded-full text-xs transition ${radius === r ? "bg-orange-500 text-white" : "text-gray-500 hover:bg-orange-50"}`}
+                  className={`px-2 py-0.5 rc-pill-flat text-xs transition ${radius === r ? "on" : ""}`}
                 >
                   {r >= 1000 ? `${r / 1000}km` : `${r}m`}
                 </button>
@@ -382,65 +527,103 @@
             </div>
           </div>
 
+          {/* 카테고리 필터 (중복 선택 가능) */}
+          <div className="px-5 mt-3">
+            <div className="rc-card p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold muted">룰렛 카테고리 ({catPool.length}/{MENUS.length})</span>
+                <div className="flex gap-2 text-xs">
+                  <button onClick={() => setSelectedCats(new Set(MENUS.map((m) => m.name)))} className="stamp-text hover:underline">전체 선택</button>
+                  <button onClick={() => setSelectedCats(new Set())} className="muted hover:underline">전체 해제</button>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {MENUS.map((m) => (
+                  <button
+                    key={m.name}
+                    onClick={() => selectCategory(m)}
+                    disabled={!loc}
+                    className={`px-2.5 py-1 rc-chip text-xs transition ${selectedCats.has(m.name) ? "on" : ""}`}
+                  >
+                    {m.emoji} {m.name}
+                  </button>
+                ))}
+              </div>
+              {catPool.length === 0 && (
+                <p className="text-xs stamp-text mt-2">카테고리를 1개 이상 선택해주세요.</p>
+              )}
+            </div>
+          </div>
+
           {/* 룰렛 카드 */}
           <div className="px-5 mt-4">
-            <div className="bg-white rounded-3xl shadow-lg p-6 text-center">
+            <div className="rc-card dash-y p-6 text-center">
               {current ? (
                 <div className={spinning ? "" : "animate-pop"} key={current.name + (spinning ? "s" : "p")}>
+                  <p className="text-[10px] tracking-[0.2em] muted mb-1">※ 오늘의 메뉴 ※</p>
                   <div className="text-7xl mb-1">{current.emoji}</div>
-                  <div className="text-2xl font-bold text-gray-800">{current.name}</div>
+                  <div className="text-2xl font-bold">{current.name}</div>
+                  {!spinning && picked && ticketNo && (
+                    <div><span className="stamp-tag">NO. {ticketNo}</span></div>
+                  )}
                 </div>
               ) : (
                 <div className="py-4">
                   <div className="text-7xl mb-1">🎲</div>
-                  <div className="text-gray-400">버튼을 눌러 오늘의 메뉴를 뽑아보세요!</div>
+                  <div className="muted">버튼을 눌러 오늘의 메뉴를 뽑아보세요!</div>
                 </div>
               )}
 
               <button
                 onClick={spin}
-                disabled={spinning || !loc}
-                className="w-full mt-5 bg-orange-500 hover:bg-orange-600 active:scale-95 disabled:bg-gray-300 text-white text-lg font-bold py-3.5 rounded-2xl transition"
+                disabled={spinning || !loc || catPool.length === 0}
+                className="w-full mt-5 rc-btn text-lg font-bold py-3.5 transition"
               >
                 {spinning ? "고르는 중…" : picked ? "다시 뽑기 🔄" : "뭐 먹지? 🎯"}
               </button>
             </div>
           </div>
 
-          {/* 지도 */}
-          <div className="px-5 mt-4">
-            <div ref={mapRef} className="w-full h-52 rounded-2xl shadow-md bg-gray-200" />
+          {/* 절취선 */}
+          <div className="px-5 mt-4"><div className="h-2.5 zigzag" /></div>
+          </>)}
+
+          {/* 지도 (항상 마운트 — 찜 탭에 갔다 와도 지도 인스턴스가 유지됨) */}
+          <div className={`px-5 mt-4 ${view === "search" ? "" : "hidden"}`}>
+            <div ref={mapRef} className="w-full h-52 rc-card" style={{ background: "var(--paper2)" }} />
+            <p className="text-[11px] muted mt-1.5">📌 위치가 다르면 지도를 탭하거나 핀을 드래그해서 고칠 수 있어요.</p>
           </div>
 
+          {view === "search" && (<>
           {/* 결과 목록 */}
           <div className="px-5 mt-4 pb-8 flex-1">
-            {searching && <p className="text-center text-gray-500 py-6">주변 식당을 찾고 있어요… 🔍</p>}
-            {searchError && <p className="text-center text-gray-500 py-6 text-sm">{searchError}</p>}
+            {searching && <p className="text-center muted py-6">주변 식당을 찾고 있어요… 🔍</p>}
+            {searchError && <p className="text-center muted py-6 text-sm">{searchError}</p>}
 
             {!searching && results.length > 0 && (
               <>
-                <h2 className="text-sm font-semibold text-gray-500 mb-2">
-                  근처 <b className="text-orange-600">{picked?.name}</b> 맛집 {results.length}곳
+                <h2 className="text-sm font-semibold muted mb-2">
+                  근처 <b className="stamp-text">{picked?.name}</b> 맛집 {results.length}곳
                 </h2>
                 <ul className="space-y-2">
                   {results.map((r, i) => (
-                    <li key={r.id} className="bg-white rounded-2xl shadow-sm hover:shadow-md p-4 transition">
+                    <li key={r.id} className="rc-row p-4 transition">
                       <div className="flex items-start justify-between gap-3">
                         <a href={r.place_url} target="_blank" rel="noreferrer" className="block min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-orange-500 font-bold text-sm">{i + 1}</span>
-                            <span className="font-semibold text-gray-800 truncate">{r.place_name}</span>
+                            <span className="stamp-text font-bold text-sm">{i + 1}.</span>
+                            <span className="font-semibold truncate">{r.place_name}</span>
                           </div>
-                          <p className="text-xs text-gray-500 mt-1">{shortCategory(r.category_name)}</p>
-                          <p className="text-xs text-gray-400 mt-0.5 truncate">{r.road_address_name || r.address_name}</p>
-                          {r.phone && <p className="text-xs text-gray-400 mt-0.5">📞 {r.phone}</p>}
+                          <p className="text-xs muted mt-1">{shortCategory(r.category_name)}</p>
+                          <p className="text-xs muted mt-0.5 truncate">{r.road_address_name || r.address_name}</p>
+                          {r.phone && <p className="text-xs muted mt-0.5">📞 {r.phone}</p>}
                         </a>
                         <div className="shrink-0 flex flex-col items-end gap-1.5">
                           <button onClick={() => toggleFav(r)} title="찜하기"
                             className="text-xl leading-none hover:scale-110 transition">
                             {favIds.has(r.id) ? "⭐" : "☆"}
                           </button>
-                          <span className="text-xs font-semibold text-orange-600 bg-orange-50 rounded-full px-2.5 py-1">
+                          <span className="text-xs font-semibold stamp-text">
                             {fmtDistance(r.distance)}
                           </span>
                         </div>
@@ -457,7 +640,7 @@
           {view === "favs" && (
             <div className="px-5 mt-3 pb-8 flex-1">
               {favs.length === 0 ? (
-                <div className="text-center text-gray-400 py-16">
+                <div className="text-center muted py-16">
                   <div className="text-5xl mb-3">⭐</div>
                   <p className="text-sm">아직 찜한 식당이 없어요.<br/>추천 결과에서 ☆를 눌러 저장해보세요.</p>
                 </div>
@@ -466,19 +649,19 @@
                   {favs.map((f) => {
                     const dist = loc ? haversine(loc, { lat: f.y, lng: f.x }) : null;
                     return (
-                      <li key={f.place_id} className="bg-white rounded-2xl shadow-sm p-4">
+                      <li key={f.place_id} className="rc-row p-4">
                         <div className="flex items-start justify-between gap-3">
                           <a href={f.place_url} target="_blank" rel="noreferrer" className="block min-w-0">
-                            <span className="font-semibold text-gray-800 truncate block">{f.place_name}</span>
-                            <p className="text-xs text-gray-500 mt-1">{f.category}</p>
-                            <p className="text-xs text-gray-400 mt-0.5 truncate">{f.address}</p>
-                            {f.phone && <p className="text-xs text-gray-400 mt-0.5">📞 {f.phone}</p>}
+                            <span className="font-semibold truncate block">{f.place_name}</span>
+                            <p className="text-xs muted mt-1">{f.category}</p>
+                            <p className="text-xs muted mt-0.5 truncate">{f.address}</p>
+                            {f.phone && <p className="text-xs muted mt-0.5">📞 {f.phone}</p>}
                           </a>
                           <div className="shrink-0 flex flex-col items-end gap-1.5">
                             <button onClick={() => removeFav(f.place_id)} title="찜 해제"
                               className="text-xl leading-none hover:scale-110 transition">⭐</button>
                             {dist != null && (
-                              <span className="text-xs font-semibold text-orange-600 bg-orange-50 rounded-full px-2.5 py-1">
+                              <span className="text-xs font-semibold stamp-text">
                                 {fmtDistance(dist)}
                               </span>
                             )}
