@@ -586,6 +586,10 @@
               strokeOpacity: 0.85,
               strokeStyle: "solid",
             });
+            // 경로 전체가 보이도록 지도를 확대/이동
+            const routeBounds = new kakao.maps.LatLngBounds();
+            path.forEach((p) => routeBounds.extend(p));
+            map.setBounds(routeBounds, 40, 40, 40, 40);
           })
           .catch(() => {});
 
