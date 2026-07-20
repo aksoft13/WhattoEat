@@ -275,16 +275,20 @@
     function RouletteWheel({ segments, onResult, disabled }) {
       const [rotation, setRotation] = useState(0);
       const [spinning, setSpinning] = useState(false);
+      const [winnerIdx, setWinnerIdx] = useState(null);
       const timeoutRef = useRef(null);
       useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
       const n = segments.length;
+      const segKey = segments.map((s) => s.name).join(",");
+      useEffect(() => { setWinnerIdx(null); }, [segKey]);
       const colors = ["var(--paper2)", "var(--paper3)"];
       const wheelGradient = n
         ? segments
             .map((_, i) => {
               const a0 = (360 / n) * i, a1 = (360 / n) * (i + 1);
-              return `${colors[i % 2]} ${a0}deg ${a1}deg`;
+              const color = i === winnerIdx ? "var(--stamp)" : colors[i % 2];
+              return `${color} ${a0}deg ${a1}deg`;
             })
             .join(",")
         : "var(--paper2)";
@@ -306,9 +310,11 @@
         const current = rotation % 360;
         const delta = (360 - targetMid - current + 360) % 360;
         setSpinning(true);
+        setWinnerIdx(null);
         setRotation(rotation + spins * 360 + delta);
         timeoutRef.current = setTimeout(() => {
           setSpinning(false);
+          setWinnerIdx(idx);
           onResult(segments[idx]);
         }, 3600);
       };
@@ -320,9 +326,18 @@
               <div className="rlt-spokes" style={{ background: `conic-gradient(${spokeGradient})` }} />
               {segments.map((m, i) => {
                 const mid = (360 / n) * (i + 0.5);
+                const isWinner = i === winnerIdx;
                 return (
                   <div key={m.name} className="rlt-label" style={{ transform: `rotate(${mid}deg) translate(0, -${n > 10 ? 80 : 68}px)` }}>
-                    <span style={{ transform: `translate(-50%,-50%) rotate(${-mid}deg)` }}>{m.emoji}</span>
+                    <span
+                      className={isWinner ? "animate-pop" : ""}
+                      style={{
+                        transform: `translate(-50%,-50%) rotate(${-mid}deg) scale(${isWinner ? 1.25 : 1})`,
+                        filter: isWinner ? "drop-shadow(0 1px 1px rgba(0,0,0,.35))" : "none",
+                      }}
+                    >
+                      {m.emoji}
+                    </span>
                   </div>
                 );
               })}
