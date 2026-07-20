@@ -58,8 +58,8 @@
 
     .rc-chip { border: 1px solid var(--line); color: var(--muted); border-radius: 2px; }
     .rc-chip.on {
-      border: 1px solid var(--ink); color: var(--ink); font-weight: 700;
-      background: repeating-linear-gradient(135deg, var(--paper2), var(--paper2) 2px, var(--paper3) 2px, var(--paper3) 4px);
+      border: 1.5px solid var(--stamp); color: var(--stamp); font-weight: 700;
+      background: rgba(198, 54, 46, 0.08);
     }
 
     .stamp-tag {
@@ -282,12 +282,12 @@
       const n = segments.length;
       const segKey = segments.map((s) => s.name).join(",");
       useEffect(() => { setWinnerIdx(null); }, [segKey]);
-      const colors = ["var(--paper2)", "var(--paper3)"];
+      // 당첨 전에는 모든 칸이 같은 색 — 특정 칸만 미리 밝아 보이지 않게
       const wheelGradient = n
         ? segments
             .map((_, i) => {
               const a0 = (360 / n) * i, a1 = (360 / n) * (i + 1);
-              const color = i === winnerIdx ? "var(--stamp)" : colors[i % 2];
+              const color = i === winnerIdx ? "var(--stamp)" : "var(--paper2)";
               return `${color} ${a0}deg ${a1}deg`;
             })
             .join(",")
@@ -832,35 +832,44 @@
                 ))}
               </div>
 
-              {/* 돌림판 */}
-              <div className="px-4 pb-1 flex items-center justify-between">
-                <span className="muted text-xs">🎡 돌림판</span>
-                <button onClick={() => setWheelOpen((v) => !v)} className="stamp-text text-xs hover:underline">
-                  {wheelOpen ? "접기 ▲" : "펼치기 ▼"}
-                </button>
-              </div>
-              {wheelOpen && (
-                <RouletteWheel segments={wheelSegments} onResult={handleWheelResult} disabled={!loc} />
-              )}
-
-              {/* 카테고리 필터 (한 화면에 모두 표시, 중복 선택 가능) */}
-              <div className="px-4 pb-2">
-                <div className="flex items-center gap-1.5 text-xs mb-1.5">
-                  <span className="muted">카테고리({catPool.length}/{MENUS.length})</span>
-                  <button onClick={() => setSelectedCats(new Set(MENUS.map((m) => m.name)))} className="stamp-text hover:underline">전체</button>
-                  <button onClick={() => setSelectedCats(new Set())} className="muted hover:underline">해제</button>
+              {/* 돌림판 + 카테고리 — 오늘 메뉴를 뽑는 한 세트 */}
+              <div className="mx-4 mb-3 rc-card overflow-hidden">
+                <div className="px-3 pt-2.5 pb-1.5 flex items-center justify-between">
+                  <span className="text-xs font-bold flex items-center gap-1">🎡 돌림판</span>
+                  <button onClick={() => setWheelOpen((v) => !v)} className="stamp-text text-xs hover:underline">
+                    {wheelOpen ? "접기 ▲" : "펼치기 ▼"}
+                  </button>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {MENUS.map((m) => (
-                    <button
-                      key={m.name}
-                      onClick={() => selectCategory(m)}
-                      disabled={!loc}
-                      className={`px-2 py-1 rc-chip text-xs transition ${selectedCats.has(m.name) ? "on" : ""}`}
-                    >
-                      {m.emoji} {m.name}
-                    </button>
-                  ))}
+                {wheelOpen && (
+                  <>
+                    <RouletteWheel segments={wheelSegments} onResult={handleWheelResult} disabled={!loc} />
+                    <div className="dash-b mx-3 mt-1" />
+                  </>
+                )}
+
+                {/* 카테고리 필터 (한 화면에 모두 표시, 중복 선택 가능) */}
+                <div className="px-3 pt-2 pb-2.5">
+                  <div className="flex items-center justify-between text-xs mb-1.5">
+                    <span className="font-bold flex items-center gap-1">
+                      🏷️ 카테고리 <span className="muted font-normal">({catPool.length}/{MENUS.length})</span>
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => setSelectedCats(new Set(MENUS.map((m) => m.name)))} className="stamp-text hover:underline">전체</button>
+                      <button onClick={() => setSelectedCats(new Set())} className="muted hover:underline">해제</button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {MENUS.map((m) => (
+                      <button
+                        key={m.name}
+                        onClick={() => selectCategory(m)}
+                        disabled={!loc}
+                        className={`px-2 py-1 rc-chip text-xs transition ${selectedCats.has(m.name) ? "on" : ""}`}
+                      >
+                        {m.emoji} {m.name}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
