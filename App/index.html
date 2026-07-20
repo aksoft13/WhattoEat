@@ -112,9 +112,10 @@
     }
     .rlt-hub {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 46px; height: 46px; border-radius: 50%;
-      background: var(--stamp); border: 2px solid var(--ink);
-      color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .04em;
+      width: 60px; height: 60px; border-radius: 50%;
+      background: var(--stamp); border: 2.5px solid var(--ink);
+      color: #fff; font-size: 16px; font-weight: 800; letter-spacing: .04em;
+      box-shadow: 0 2px 6px -1px rgba(33, 30, 25, 0.4);
       z-index: 3;
     }
     .rlt-hub:disabled { opacity: .55; }
@@ -292,13 +293,16 @@
             })
             .join(",")
         : "var(--paper2)";
+      // 얇은 칸 경계선만 그리고 나머지는 완전히 투명해야 함 — 색이 같은 스톱끼리는
+      // 그 사이 전체가 보간되어 버려서 원판 전체가 어둡게 덮이는 버그가 있었음
       const spokeGradient = n
         ? segments
             .map((_, i) => {
-              const a = (360 / n) * i;
-              return `var(--ink) ${a}deg ${a + 0.6}deg`;
+              const a0 = (360 / n) * i;
+              const a1 = a0 + 0.6;
+              return `transparent ${a0}deg, var(--ink) ${a0}deg, var(--ink) ${a1}deg, transparent ${a1}deg`;
             })
-            .join(",") + ", transparent 0"
+            .join(",")
         : "none";
 
       const spin = () => {
