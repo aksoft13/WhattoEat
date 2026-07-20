@@ -90,6 +90,34 @@
       border-radius: 999px;
       box-shadow: 0 2px 8px -2px rgba(33, 30, 25, 0.25);
     }
+
+    /* 돌림판 */
+    .rlt-wrap { position: relative; width: 208px; height: 208px; margin: 2px auto 0; }
+    .rlt-wheel {
+      width: 100%; height: 100%; border-radius: 50%;
+      border: 2px solid var(--ink);
+      position: relative;
+      transition: transform 3.6s cubic-bezier(0.17, 0.89, 0.24, 1);
+    }
+    .rlt-spokes { position: absolute; inset: 0; border-radius: 50%; opacity: .5; }
+    .rlt-label { position: absolute; top: 50%; left: 50%; width: 0; height: 0; }
+    .rlt-label span { position: absolute; display: inline-block; font-size: 15px; white-space: nowrap; }
+    .rlt-pointer {
+      position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 9px solid transparent; border-right: 9px solid transparent;
+      border-top: 15px solid var(--stamp);
+      z-index: 4;
+      filter: drop-shadow(0 1px 0 var(--ink));
+    }
+    .rlt-hub {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 46px; height: 46px; border-radius: 50%;
+      background: var(--stamp); border: 2px solid var(--ink);
+      color: #fff; font-size: 12px; font-weight: 700; letter-spacing: .04em;
+      z-index: 3;
+    }
+    .rlt-hub:disabled { opacity: .55; }
   </style>
 </head>
 <body>
@@ -243,6 +271,74 @@
       );
     }
 
+    // ── 돌림판 ────────────────────────────────
+    function RouletteWheel({ segments, onResult, disabled }) {
+      const [rotation, setRotation] = useState(0);
+      const [spinning, setSpinning] = useState(false);
+      const timeoutRef = useRef(null);
+      useEffect(() => () => clearTimeout(timeoutRef.current), []);
+
+      const n = segments.length;
+      const colors = ["var(--paper2)", "var(--paper3)"];
+      const wheelGradient = n
+        ? segments
+            .map((_, i) => {
+              const a0 = (360 / n) * i, a1 = (360 / n) * (i + 1);
+              return `${colors[i % 2]} ${a0}deg ${a1}deg`;
+            })
+            .join(",")
+        : "var(--paper2)";
+      const spokeGradient = n
+        ? segments
+            .map((_, i) => {
+              const a = (360 / n) * i;
+              return `var(--ink) ${a}deg ${a + 0.6}deg`;
+            })
+            .join(",") + ", transparent 0"
+        : "none";
+
+      const spin = () => {
+        if (spinning || disabled || n === 0) return;
+        const idx = Math.floor(Math.random() * n);
+        const segAngle = 360 / n;
+        const targetMid = segAngle * idx + segAngle / 2;
+        const spins = 5 + Math.floor(Math.random() * 2);
+        const current = rotation % 360;
+        const delta = (360 - targetMid - current + 360) % 360;
+        setSpinning(true);
+        setRotation(rotation + spins * 360 + delta);
+        timeoutRef.current = setTimeout(() => {
+          setSpinning(false);
+          onResult(segments[idx]);
+        }, 3600);
+      };
+
+      return (
+        <div className="flex flex-col items-center py-1.5">
+          <div className="rlt-wrap">
+            <div className="rlt-wheel" style={{ background: `conic-gradient(${wheelGradient})`, transform: `rotate(${rotation}deg)` }}>
+              <div className="rlt-spokes" style={{ background: `conic-gradient(${spokeGradient})` }} />
+              {segments.map((m, i) => {
+                const mid = (360 / n) * (i + 0.5);
+                return (
+                  <div key={m.name} className="rlt-label" style={{ transform: `rotate(${mid}deg) translate(0, -${n > 10 ? 80 : 68}px)` }}>
+                    <span style={{ transform: `translate(-50%,-50%) rotate(${-mid}deg)` }}>{m.emoji}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="rlt-pointer" />
+            <button onClick={spin} disabled={disabled || spinning || n === 0} className="rlt-hub">
+              {spinning ? "···" : "GO"}
+            </button>
+          </div>
+          <p className="text-[11px] muted mt-1.5">
+            {disabled ? "위치 확인 중…" : spinning ? "돌아가는 중…" : "돌림판을 눌러 오늘 메뉴를 골라보세요"}
+          </p>
+        </div>
+      );
+    }
+
     // ── 메인 앱 ────────────────────────────────
     function App() {
       const [kakaoKey, setKakaoKey] = useState(() => localStorage.getItem("kakaoKey") || DEFAULT_KAKAO_KEY);
@@ -267,6 +363,9 @@
         localStorage.setItem("savedLocs", JSON.stringify(savedLocs));
       }, [savedLocs]);
 
+      // 돌림판 열고 닫기
+      const [wheelOpen, setWheelOpen] = useState(true);
+
       // 룰렛에 포함할 카테고리 (기본: 전체 해제, 중복 선택 가능)
       const [selectedCats, setSelectedCats] = useState(() => new Set());
       const toggleCat = useCallback((name) => {
@@ -277,6 +376,7 @@
         });
       }, []);
       const catPool = MENUS.filter((m) => selectedCats.has(m.name));
+      const wheelSegments = catPool.length > 0 ? catPool : MENUS;
 
       const [picked, setPicked] = useState(null);    // 선택된 카테고리
       const [results, setResults] = useState([]);
@@ -641,6 +741,14 @@
         runSearch(m);
       }, [toggleCat, runSearch]);
 
+      // 돌림판이 멈추면 그 메뉴로 바로 검색
+      const handleWheelResult = useCallback((m) => {
+        setPicked(m);
+        setSelectedPlace(null);
+        setMenuUrl(null);
+        runSearch(m);
+      }, [runSearch]);
+
       const resetKey = () => {
         localStorage.removeItem("kakaoKey");
         setKakaoKey("");
@@ -708,6 +816,17 @@
                   </button>
                 ))}
               </div>
+
+              {/* 돌림판 */}
+              <div className="px-4 pb-1 flex items-center justify-between">
+                <span className="muted text-xs">🎡 돌림판</span>
+                <button onClick={() => setWheelOpen((v) => !v)} className="stamp-text text-xs hover:underline">
+                  {wheelOpen ? "접기 ▲" : "펼치기 ▼"}
+                </button>
+              </div>
+              {wheelOpen && (
+                <RouletteWheel segments={wheelSegments} onResult={handleWheelResult} disabled={!loc} />
+              )}
 
               {/* 카테고리 필터 (한 화면에 모두 표시, 중복 선택 가능) */}
               <div className="px-4 pb-2">
